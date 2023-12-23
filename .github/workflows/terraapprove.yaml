@@ -1,0 +1,36 @@
+name: TerraApprove example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: example-01
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - run: terraform init
+
+      - run: terraform plan -out plan
+
+      - run: terraform show -json plan > plan.json
+
+      - name: TerraApprove
+        id: terraapprove
+        uses: giovannibaratta/terraapprove-github-action@v0.0.8
+        with:
+          tf_code_dir: example-01
+          tf_plan_json_file: example-01/plan.json
+
+      - name: TerraApprove output
+        run: |
+          echo "Approval required: ${{ steps.terraapprove.outputs.approval_required }}"
